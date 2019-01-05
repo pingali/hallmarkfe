@@ -1,0 +1,60 @@
+{
+    "rules" : [
+    {
+        "name": "calls",
+        "description": "Large duration calls",
+        "notes": "Includes only those that are longer than 2 mins",
+        "operators": [
+            {                
+                "level": 1,
+                "handler": "handler_table_apply_rule",
+                "params": {
+                    "table": "memberdates",
+                    "match": ".*__xx__total", 
+                    "metrics": [
+                        {
+                            "name": "total", 
+                            "handler": "total_match",
+                            "args": {
+                                "feature": "%(match)s"
+                            }
+                        },
+                        {
+                            "name": "avg", 
+                            "handler": "avg_match"
+                        }
+                    ] 
+                }
+            },
+            {                
+                "level": 1,
+                "handler": "handler_table_apply_rule",
+                "params": {
+                    "table": "memberdates",
+                    "metrics": [
+                        {
+                            "name": "dates", 
+                            "handler": "dates"
+                        },
+                        {
+                            "name": "first_day", 
+                            "handler": "first_day",
+                            "args": {
+                                "suffix": "firstday" 
+                            }
+                        },
+                        {
+                            "name": "last_day", 
+                            "handler": "last_day",
+                            "args": {
+                                "suffix": "lastday" 
+                            }
+                        }                          
+                    ]
+                }
+            }
+                           
+        ]
+    }
+]
+}
