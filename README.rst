@@ -2,6 +2,9 @@
  hallmarkfe
 ===========
 
+.. important::
+   This library is still under development. Wait for the release.
+
 Python package to specify and process ML features over flexible data
 sources - batch and streaming. 
 
