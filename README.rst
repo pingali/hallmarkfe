@@ -1,3 +1,7 @@
+[NOTE] This package is in early stages of the development. So please get in
+touch with the developers before using.
+
+
 ===========
  hallmarkfe
 ===========
@@ -21,8 +25,6 @@ This package helps:
 (d) Allows unit testing of the features before they are put into
     production
 
-This package is in early stages of the development. So please get in
-touch with the developers before using.
 
 See `documentation`_ for interface details.
 
@@ -45,8 +47,8 @@ Setup
 =====
 
 ::
-
-  (venv)$ pip3 install hallmarkfe
+  Clone and download the package.
+  (venv)$ pip3 install -e .
 
 Usage
 =====
