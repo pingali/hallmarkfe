@@ -15,7 +15,7 @@ import texttable
 from .exceptions import *
 from .utils import *
 
-__all__ = ['SpecRegistry', 'SpecMeta', 'SpecBase', 'SpecManagerBase', 'sample']
+__all__ = ['SpecRegistry', 'SpecMeta', 'SpecBase', 'SpecManagerBase']
 
 class SpecRegistry(object):
     """
@@ -77,13 +77,12 @@ class SpecRegistry(object):
             for i in schema_handler:
                 schema.append(i["schema"])
 
-
         for h in cls._registry: 
-            if ((isinstance(h.schema, str)) and
+            if ((isinstance(schema, str)) and
                 (h.schema == schema)):
                 return h 
 
-            if isinstance(h.schema_list, list):
+            elif isinstance(schema, list):
                 if set(h.schema_list) == set(schema):
                     return h
 
@@ -97,7 +96,6 @@ class SpecRegistry(object):
 
         A class can load one or more schema types.
         """
-
         if os.path.isfile(str(dct)):
             with open(dct) as f:
                 fh = (f.read()) 
@@ -109,7 +107,7 @@ class SpecRegistry(object):
                 raise SpecInvalidSpecification("Not an accepted file format")
         else:
             handler_ = dct
-            if 'schema' not in handler_:
+            if isinstance(handler_,dict) and 'schema' not in handler_:
                 raise SpecMissingSchema() 
 
         if isinstance(handler_,list):
@@ -121,13 +119,6 @@ class SpecRegistry(object):
 
 
         return (handler_,cls.find_handler_for_schema(handler_))
-        
-    @classmethod 
-    def find_handler(cls, schema):
-        """
-        Short form of find_handler_for_schema
-        """
-        return cls.find_handler_for_schema(schema)
     
     
 class SpecMeta(abc.ABCMeta):
@@ -371,8 +362,3 @@ class SpecManagerBase():
     @classmethod
     def scan_dir(self,path_):
         return glob.glob(os.path.join(path_,'spec_*.json'))+ glob.glob(os.path.join(path_,'spec_*.yaml'))
-
-
-class sample():
-    def hello():
-        return "hello"

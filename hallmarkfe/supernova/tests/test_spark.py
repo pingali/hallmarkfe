@@ -8,6 +8,7 @@ from pyspark import SparkContext
 from pyspark.sql import SQLContext
 from pyspark.sql.functions import udf
 from pyspark.sql.types import *
+import unittest
 
 thisdir = os.path.abspath(os.path.dirname(__file__))
 
@@ -22,7 +23,7 @@ def sparkctx_master():
     sc = SparkContext(master)
     return sc 
 
-
+@unittest.skipIf("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", "Skipping this test on Travis CI.")
 def test_basic_spark(sparkctx_local):
     """
     Test using spark 
@@ -56,8 +57,7 @@ def test_basic_spark(sparkctx_local):
 
 def find_egg():
 
-    eggs = glob.glob(os.path.join(thisdir,
-                                  "..", "dist", "*egg"))
+    eggs = glob.glob(os.path.join(os.getcwd(),"dist", "*egg"))
                      
     eggs = sorted(eggs, reverse=True)
     if len(eggs) == 0:
@@ -65,6 +65,7 @@ def find_egg():
 
     return eggs[0]
 
+@unittest.skipIf("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", "Skipping this test on Travis CI.")
 def test_basic_spark(sparkctx_local):
     """
     Test using spark 

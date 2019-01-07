@@ -57,8 +57,10 @@ requires = [
     'texttable',
     'itertoolz',
     'cytoolz',
-    'pytest' 
-]
+    'pandas',
+    'pytest-cov',
+    'PyYAML',
+    'python-coveralls']
 
 tests_requires = [
     'pytest',

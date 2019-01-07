@@ -1,0 +1,17 @@
+--- 
+dataStores: 
+  serving: 
+    id: example_serving
+  warehouse: 
+    id: example_warehouse
+description: "This feature represents a user's total completed orders"
+entity: user
+granularity: NONE
+id: user.none.completed_orders
+name: completed_orders
+options: {}
+owner: feast@example.com
+schema: "user:default:v1"
+tags: []
+uri: "https://example.com/"
+valueType: INT32

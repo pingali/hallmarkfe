@@ -1,5 +1,14 @@
-[NOTE] This package is in early stages of the development. So please get in
-touch with the developers before using.
+.. image:: https://coveralls.io/repos/github/abhiramr/hallmarkfe/badge.svg?branch=master
+    :target: https://coveralls.io/github/abhiramr/hallmarkfe?branch=master
+
+
+.. image:: https://img.shields.io/travis/abhiramr/hallmarkfe/master.svg 
+    :target: https://travis-ci.org/abhiramr/hallmarkfe
+
+
+
+**[NOTE] This package is in early stages of the development. So please get in
+touch with the developers before using.**
 
 
 ===========
@@ -46,8 +55,9 @@ Features
 Setup
 =====
 
-::
   Clone and download the package.
+::
+
   (venv)$ pip3 install -e .
 
 Usage
@@ -57,7 +67,6 @@ Usage
 
   $ python
   >>> import hallmarkfe
-  >>> hallmarkfe.sample.hello()
-  'hello'
-  >>>
+  >>> hallmarkfe.parse_generic({'name': 'Author1', 'schema': 'global:default:v1', 'description': 'First Spec', 'AdditionalKey': 'AdditionalValue', 'owner': 'ScribbleData'})
+  >>> <hallmarkfe.spec.base.SpecBase at 0x7f08edf366d8>
 
