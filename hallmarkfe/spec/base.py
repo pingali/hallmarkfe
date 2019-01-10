@@ -7,13 +7,15 @@ Base classes for the specification handlers
 import os
 import sys
 import json
+import yaml
 import collections 
-import abc 
+import abc
+import glob
 import texttable 
 from .exceptions import *
 from .utils import *
 
-__all__ = ['SpecRegistry', 'SpecMeta', 'SpecBase']
+__all__ = ['SpecRegistry', 'SpecMeta', 'SpecBase', 'SpecManagerBase']
 
 class SpecRegistry(object):
     """
@@ -61,46 +63,62 @@ class SpecRegistry(object):
     # Helper methods 
     #############################################
     @classmethod 
-    def find_handler_for_schema(cls, schema):
+    def find_handler_for_schema(cls, schema_handler):
         """
         Find loader for a given schema. 
 
         A class can load one or more schema types.
         """
+        if isinstance(schema_handler,dict):
+            schema = schema_handler['schema']
+
+        if isinstance(schema_handler,list):
+            schema = []
+            for i in schema_handler:
+                schema.append(i["schema"])
+
         for h in cls._registry: 
-            if ((isinstance(h.schema, str)) and
+            if ((isinstance(schema, str)) and
                 (h.schema == schema)):
                 return h 
 
-            if isinstance(h.schema, list):
-                for s in h.schema: 
-                    if s == schema:
-                        return h 
+            elif isinstance(schema, list):
+                if set(h.schema_list) == set(schema):
+                    return h
 
         raise SpecNoHandler()
 
-    
+
     @classmethod 
-    def find_handler_for_dict(cls, dct):
+    def find_handler_generic(cls, dct):
         """
-        Find the handler class and load dict 
+        Find the handler class and load file 
 
         A class can load one or more schema types.
         """
-        if not isinstance(dct, dict):
-            raise SpecInvalidSpec("Not a dictionary")
+        if os.path.isfile(str(dct)):
+            with open(dct) as f:
+                fh = (f.read()) 
+            if dct.lower().endswith('.json'):
+                handler_ = json.loads(fh)            
+            elif dct.lower().endswith(('.yaml','.yml')):
+                handler_ = yaml.load(fh)
+            else:
+                raise SpecInvalidSpecification("Not an accepted file format")
+        else:
+            handler_ = dct
+            if isinstance(handler_,dict) and 'schema' not in handler_:
+                raise SpecMissingSchema() 
 
-        if 'schema' not in dct:
-            raise SpecMissingSchema() 
-        
-        return cls.find_handler_for_schema(dct['schema']) 
+        if isinstance(handler_,list):
+            if any(not isinstance(item,dict) for item in handler_):
+                raise SpecInvalidSpecification("Not a valid specification list.")
 
-    @classmethod 
-    def find_handler(cls, schema):
-        """
-        Short form of find_handler_for_schema
-        """
-        return cls.find_handler_for_schema(schema)
+        elif not isinstance(handler_, dict):
+            raise SpecInvalidSpecification("Not a dictionary")
+
+
+        return (handler_,cls.find_handler_for_schema(handler_))
     
     
 class SpecMeta(abc.ABCMeta):
@@ -147,6 +165,7 @@ class SpecBase(metaclass=SpecMeta):
     """        
 
     schema = "global:default:v1"
+    schema_list = ["global:default:v1"]
     """
     Every Spec metadata class should specify a schema (a 
     string or a list of strings) 
@@ -192,18 +211,26 @@ class SpecBase(metaclass=SpecMeta):
 
         if spec is None:
             spec = self.spec
-        
-        for r in self.required:
 
-            if r not in spec:
-                raise SpecInvalidSpecification("Missing: {}".format(r))
-            
-            if hasattr(self, 'validate_' + r):
-                func = getattr(self, 'validate_' + r)
-                func(metadata[r])
+        def check_required(spec):
+            for r in self.required:
+                if r not in spec:
+                    raise SpecInvalidSpecification("Missing: {}".format(r))
+                if hasattr(self, 'validate_' + r):
+                    func = getattr(self, 'validate_' + r)
+                    func(metadata[r])
+  
+        if isinstance(spec,dict):
+                check_required(spec)
 
 
-    @abc.abstractmethod             
+        elif isinstance(spec,list):
+            for i in spec:
+                check_required(i)
+
+
+
+    # @abc.abstractmethod             
     def initialize(self, *args, **kwargs):
         """
         Initialize the state of the metadata object 
@@ -248,16 +275,20 @@ class SpecBase(metaclass=SpecMeta):
         """
         Load a dictionary. Call element-specific handler if it exists. 
         """
-        if not isinstance(spec, dict):
-            raise SpecInvalidSpec("Spec not a dict")
 
-        final = {} 
-        for k, v in spec.items():
-            if hasattr(self, 'load_' + k):
-                func = getattr(self, 'load_' + k)
-            else:
-                func = lambda x: x
-            final[k] = func(v)
+        if isinstance(spec,list):
+            final = []
+            for i in spec:
+                final.append(i)
+
+        elif isinstance(spec,dict):
+            final = {} 
+            for k, v in spec.items():
+                if hasattr(self, 'load_' + k):
+                    func = getattr(self, 'load_' + k)
+                else:
+                    func = lambda x: x
+                final[k] = func(v)
 
         # Check to make sure the spec is complete and valid 
         self.validate(final)
@@ -320,3 +351,14 @@ class SpecBase(metaclass=SpecMeta):
         table.add_rows(rows) 
         return table.draw() 
 
+class SpecManagerBase():
+    def __init__(self, *args, **kwargs):
+        self.spec_files = []
+        """
+        Accept path and read list of spec files available in path. 
+
+        required prefix: spec_
+        """
+    @classmethod
+    def scan_dir(self,path_):
+        return glob.glob(os.path.join(path_,'spec_*.json'))+ glob.glob(os.path.join(path_,'spec_*.yaml'))

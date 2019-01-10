@@ -56,8 +56,11 @@ requires = [
     'sphinx-click',
     'texttable',
     'itertoolz',
-    'cytoolz' 
-]
+    'cytoolz',
+    'pandas',
+    'pytest-cov',
+    'PyYAML',
+    'python-coveralls']
 
 tests_requires = [
     'pytest',

@@ -8,7 +8,7 @@ build
 dist/
 .coverage
 .cache
-htmlcov
+**htmlcov**
 *requirement*.txt
 *.pickle
 *~

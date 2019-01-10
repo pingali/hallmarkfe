@@ -1,28 +1,9 @@
 language: python
-sudo: false
-env:
-  - TOX_ENV=py35
-  - TOX_ENV=py36
+python:
+  - "3.5"
 install:
-  - pip install coveralls tox
-script:
-  - tox -e $TOX_ENV
-  - python setup.py check -r
+  - pip install .
+# command to run tests
+script: pytest
 after_success:
-  - coveralls --verbose
-
-matrix:
-  allow_failures:
-    - python: 2.7
-      env: TOX_ENV=py27
-    - python: pypy
-      env: TOX_ENV=pypy
-    - python: pypy3.5
-      env: TOX_ENV=pypy3
-    - python: py3.7-dev
-      env: TOX_ENV=py37
-  include:
-    - python: 3.5
-      env: TOX_ENV=py35
-    - python: 3.6
-      env: TOX_ENV=py36
+  - coveralls

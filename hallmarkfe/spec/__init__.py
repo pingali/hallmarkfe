@@ -9,19 +9,18 @@ from .exceptions import *
 
 from . import exceptions, base 
 
-__all__ = ['parse', 'register', 'unregister'] + \
+__all__ = ['parse_generic', 'register', 'unregister'] + \
           base.__all__ + \
-          exceptions.__all__ 
-           
+          exceptions.__all__
 
-
-def parse(dct):
+def parse_generic(dct):
     """
     Create Hallmark specification object 
    
-    :param dict dct: Specification (a dictionary) 
+    :param dict dct: Specification (a dictionary) or file location (a string)
+
     """
-    cls = SpecRegistry.find_handler_for_dict(dct)
+    dct,cls = SpecRegistry.find_handler_generic(dct)
     obj = cls() 
     obj.load(dct)
     return obj 
@@ -41,4 +40,3 @@ def unregister(cls):
     :param class cls: Handler class
     """
     SpecRegistry.unregister(cls)
-
