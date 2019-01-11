@@ -9,12 +9,6 @@ API
    :show-inheritance:
    :inherited-members:
 
-.. automodule:: hallmarkfe.supernova 
-   :members:
-   :show-inheritance:
-   :inherited-members:      
-
-
 
 CLI
 ===

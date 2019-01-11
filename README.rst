@@ -125,4 +125,33 @@ API
 CLI
 ---
 
-
+::
+   
+  $ hfe 
+  Usage: hfe [OPTIONS] COMMAND [ARGS]...
+  
+    Commandline for Hallmark Specifications
+  
+  Options:
+    --help  Show this message and exit.
+  
+  Commands:
+    schema  Discovery and operation specification formats
+  $ hfe schema
+  Usage: hfe schema [OPTIONS] COMMAND [ARGS]...
+  
+    Discovery and operation specification formats
+  
+  Options:
+    --help  Show this message and exit.
+  
+  Commands:
+    list  List available schemas
+  $ hfe schema list
+  +-------------------+----------+-----------------------------------------------+
+  |      Schema       |  Class   |                    Module                     |
+  +===================+==========+===============================================+
+  | global:default:v1 | SpecBase | /work/pingali/Code/pingali-                   |
+  |                   |          | hallmarkfe/hallmarkfe/spec/base.py            |
+  +-------------------+----------+-----------------------------------------------+
+  

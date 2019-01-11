@@ -60,7 +60,8 @@ requires = [
     'pandas',
     'pytest-cov',
     'PyYAML',
-    'python-coveralls']
+    'coveralls'
+]
 
 tests_requires = [
     'pytest',
