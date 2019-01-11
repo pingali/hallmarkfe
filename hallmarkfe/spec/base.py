@@ -55,70 +55,61 @@ class SpecRegistry(object):
         List known schemas and handling classes
         """
         for c in cls._registry:
-            if c.schema == schema:
-                return c 
-        raise Exception("Unknown schema: {}".format(schema))
+            if c.match(schema): 
+                return c
+            
+        raise SpecNoHandler("Unknown schema: {}".format(schema))
 
     #############################################
     # Helper methods 
     #############################################
     @classmethod 
-    def find_handler_for_schema(cls, schema_handler):
+    def find_handler_for_schema(cls, spec):
         """
         Find loader for a given schema. 
 
         A class can load one or more schema types.
         """
-        if isinstance(schema_handler,dict):
-            schema = schema_handler['schema']
 
-        if isinstance(schema_handler,list):
-            schema = []
-            for i in schema_handler:
-                schema.append(i["schema"])
+        schemas = []
+        if isinstance(spec, dict) and len(spec) > 0:
+            if 'schema' not in spec: 
+                raise SpecInvalidSpecification("Not a dict or list")
+            schemas.append(spec['schema'])
+        elif isinstance(spec, list) and len(spec) > 0: 
+            for item in spec:
+                if 'schema' not in item:
+                    raise SpecInvalidSpecification("Not a dict or list")                    
+                schemas.append(item["schema"])
+        else:
+            raise SpecInvalidSpecification("Not a dict or list")
 
         for h in cls._registry: 
-            if ((isinstance(schema, str)) and
-                (h.schema == schema)):
+            if h.match(schemas):
                 return h 
 
-            elif isinstance(schema, list):
-                if set(h.schema_list) == set(schema):
-                    return h
-
-        raise SpecNoHandler()
+        raise SpecNoHandler("Unknown schema: {}".format(schemas))
 
 
     @classmethod 
-    def find_handler_generic(cls, dct):
+    def find_handler_generic(cls, arg):
         """
         Find the handler class and load file 
 
         A class can load one or more schema types.
         """
-        if os.path.isfile(str(dct)):
-            with open(dct) as f:
-                fh = (f.read()) 
-            if dct.lower().endswith('.json'):
-                handler_ = json.loads(fh)            
-            elif dct.lower().endswith(('.yaml','.yml')):
-                handler_ = yaml.load(fh)
+
+        if isinstance(arg, str) and os.path.isfile(arg):
+            if arg.lower().endswith('.json'):
+                spec = json.load(open(arg))
+            elif arg.lower().endswith(('.yaml','.yml')):
+                spec = yaml.load(open(arg))
             else:
                 raise SpecInvalidSpecification("Not an accepted file format")
         else:
-            handler_ = dct
-            if isinstance(handler_,dict) and 'schema' not in handler_:
-                raise SpecMissingSchema() 
+            spec = arg
 
-        if isinstance(handler_,list):
-            if any(not isinstance(item,dict) for item in handler_):
-                raise SpecInvalidSpecification("Not a valid specification list.")
-
-        elif not isinstance(handler_, dict):
-            raise SpecInvalidSpecification("Not a dictionary")
-
-
-        return (handler_,cls.find_handler_for_schema(handler_))
+        return (spec, cls.find_handler_for_schema(spec))
     
     
 class SpecMeta(abc.ABCMeta):
@@ -165,7 +156,6 @@ class SpecBase(metaclass=SpecMeta):
     """        
 
     schema = "global:default:v1"
-    schema_list = ["global:default:v1"]
     """
     Every Spec metadata class should specify a schema (a 
     string or a list of strings) 
@@ -183,6 +173,11 @@ class SpecBase(metaclass=SpecMeta):
             'owner'
         ]
 
+        self.order = []
+        """
+        Order in which the elements must be stored/printed 
+        """
+        
         # Now initialize
         self.initialize()
 
@@ -203,9 +198,9 @@ class SpecBase(metaclass=SpecMeta):
 
     def validate(self, spec=None):
         """
-        Check if the metadata is valid 
+        Check if the spec is valid 
 
-        :param dict metadata: Optional metadata dict to be validated. 
+        :param dict spec: Optional spec dict to be validated. 
               If not specified, will use the class's metadata attribute. 
         """
 
@@ -237,16 +232,39 @@ class SpecBase(metaclass=SpecMeta):
         """
         pass 
 
+    @classmethod 
+    def match(cls, schemas):
+        """
+        Check if this handler can service a given set of schemas
+        
+        This is a conservative function 
+        """
+
+        if isinstance(schemas, str) and len(schemas) > 0:
+            schemas = [schemas]
+        elif isinstance(schemas, list) and len(schemas) > 0: 
+            for s in schemas:
+                if not isinstance(s, str) or len(s) == 0: 
+                    raise SpecInvalidSchema()
+        else:
+            raise SpecInvalidSchema("Should be a string or a list")
+            
+        myschemas = cls.schema
+        if isinstance(myschemas, str):
+            myschemas = [myschemas]
+            
+        return set(myschemas) == set(schemas)
+                
     def dump(self):
         """
-        Return the metadata as a dictionary 
+        Return the specification as a dictionary 
         """
         self.validate()
 
         d = [('schema', self.schema)]
 
         # Take a union of order and required 
-        order = self.order
+        order = getattr(self, 'order', []) 
         for k in self.required:
             if k not in order:
                 order.append(k)
@@ -258,9 +276,9 @@ class SpecBase(metaclass=SpecMeta):
                 func = getattr(self, 'dump_' + k)
             else:
                 func = lambda x: x 
-            d.append((k, func(self.metadata[k])))
+            d.append((k, func(self.spec[k])))
             
-        for k,v in self.metadata.items():
+        for k,v in self.spec.items():
             if k in self.order:
                 continue
             if hasattr(self, 'dump_' + k):
@@ -318,8 +336,9 @@ class SpecBase(metaclass=SpecMeta):
             ('schema', self.schema)
         ]
 
-        # Take a union of order and required 
-        order = self.order
+        # Take a union of order and required
+        order = getattr(self, 'order', [])         
+
         for k in self.required:
             if k not in order:
                 order.append(k)
@@ -352,13 +371,33 @@ class SpecBase(metaclass=SpecMeta):
         return table.draw() 
 
 class SpecManagerBase():
+    """
+    Manage a specification directory 
+    """
     def __init__(self, *args, **kwargs):
-        self.spec_files = []
+        self.specs = []
         """
         Accept path and read list of spec files available in path. 
 
         required prefix: spec_
         """
-    @classmethod
-    def scan_dir(self,path_):
-        return glob.glob(os.path.join(path_,'spec_*.json'))+ glob.glob(os.path.join(path_,'spec_*.yaml'))
+        
+    def load(self, path):
+        """
+        Load a directory 
+        """
+        import hallmarkfe 
+        files = glob.glob(os.path.join(path,'spec_*.json'))
+        files += glob.glob(os.path.join(path,'spec_*.yaml'))
+        for f in files:
+            try:
+                obj = hallmarkfe.parse_generic(f)
+                self.specs.append(obj) 
+            except:
+                pass 
+
+    def clear(self):
+        """
+        Clear the state 
+        """
+        self.specs = [] 

@@ -13,14 +13,14 @@ __all__ = ['parse_generic', 'register', 'unregister'] + \
           base.__all__ + \
           exceptions.__all__
 
-def parse_generic(dct):
+def parse_generic(arg):
     """
     Create Hallmark specification object 
    
-    :param dict dct: Specification (a dictionary) or file location (a string)
+    :param object arg: Specification (a dictionary) or file location (a string)
 
     """
-    dct,cls = SpecRegistry.find_handler_generic(dct)
+    dct, cls = SpecRegistry.find_handler_generic(arg)
     obj = cls() 
     obj.load(dct)
     return obj 
@@ -40,3 +40,23 @@ def unregister(cls):
     :param class cls: Handler class
     """
     SpecRegistry.unregister(cls)
+
+def schema_list():
+    """
+    Get a list of available schemas 
+    """
+    return SpecRegistry.schema_list()
+    
+
+def schema_list():
+    """
+    Get a list of available schemas 
+    """
+    return SpecRegistry.schema_list()
+    
+def schema_get(schema):
+    """
+    Get a list of available schemas 
+    """
+    return SpecRegistry.schema_get(schema) 
+    

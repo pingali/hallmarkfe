@@ -32,8 +32,7 @@ def _schema_list():
     List available schemas 
     """
 
-    parser = spec.parser() 
-    summary = parser.schema_list()
+    summary = spec.schema_list()
     table = Texttable()
     table.add_rows(summary)
     print(table.draw())

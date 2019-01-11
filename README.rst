@@ -66,10 +66,63 @@ Setup
 Usage
 =====
 
+API
+---
+
 ::
 
+  # A feature specification 
+  $ cat spec_user.json
+  {
+      "schema": "user:default:v1",
+      "name": "completed_orders",
+      "owner": "example@example.com",
+      "description": "This feature represents a user's total completed orders",
+  
+      "id": "user.completed_orders",
+      "entity": "user",
+      "granularity": "NONE",
+      ...
+  }
+
+  # Now parse it..
   $ python
+  >>> import json 
   >>> import hallmarkfe
-  >>> hallmarkfe.parse_generic({'name': 'Author1', 'schema': 'global:default:v1', 'description': 'First Spec', 'AdditionalKey': 'AdditionalValue', 'owner': 'ScribbleData'})
-  >>> <hallmarkfe.spec.base.SpecBase at 0x7f08edf366d8>
+  >>> handler = hallmarkfe.parse_generic('spec_user.json')
+  >>> handler 
+  <hallmarkfe.spec.base.SpecBase at 0x7f08edf366d8>
+  >>> print(handler.prettyprint())
+  +-------------+----------------------------------------------------------------+
+  |  Dimension  |                            Summary                             |
+  +=============+================================================================+
+  | schema      | global:default:v1                                              |
+  +-------------+----------------------------------------------------------------+
+  | name        | completed_orders                                               |
+  +-------------+----------------------------------------------------------------+
+  | description | This feature represents a user's total completed orders        |
+  +-------------+----------------------------------------------------------------+
+  | owner       | feast@example.com                                              |
+  +-------------+----------------------------------------------------------------+
+  | dataStores  | {'warehouse': {'id': 'example_warehouse'}, 'serving': {'id':   |
+  |             | 'example_serving'}}                                            |
+  +-------------+----------------------------------------------------------------+
+  | entity      | user                                                           |
+  +-------------+----------------------------------------------------------------+
+  | granularity | NONE                                                           |
+  +-------------+----------------------------------------------------------------+
+  | id          | user.none.completed_orders                                     |
+  +-------------+----------------------------------------------------------------+
+  | options     | {}                                                             |
+  +-------------+----------------------------------------------------------------+
+  | tags        |                                                                |
+  +-------------+----------------------------------------------------------------+
+  | uri         | https://example.com/                                           |
+  +-------------+----------------------------------------------------------------+
+  | valueType   | INT32                                                          |
+  +-------------+----------------------------------------------------------------+
+    
+CLI
+---
+
 
